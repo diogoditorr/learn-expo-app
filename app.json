@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "expo-app-example",
-    "slug": "expo-app-example",
+    "name": "StickerSmash",
+    "slug": "sticker-smash",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
