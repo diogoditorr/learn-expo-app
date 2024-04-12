@@ -2,7 +2,7 @@ import { launchImageLibraryAsync } from 'expo-image-picker';
 import * as MediaLibrary from 'expo-media-library';
 import { StatusBar } from 'expo-status-bar';
 import { useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { Button } from './src/components/button';
 import { CircleButton } from './src/components/circle-button';
@@ -12,13 +12,14 @@ import EmojiSticker from './src/components/emoji-sticker';
 import IconButton from './src/components/icon-button';
 import { ImageViewer } from './src/components/image-viewer';
 import { captureRef } from 'react-native-view-shot';
+import domtoimage from 'dom-to-image';
 
 const PlaceholderImage = require('./assets/images/background-image.png');
 
 export default function App() {
   const [status, requestPermission] = MediaLibrary.usePermissions();
 
-  const imageRef = useRef(null);
+  const imageRef = useRef<View>(null);
 
   const [pickedEmoji, setPickedEmoji] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -47,17 +48,39 @@ export default function App() {
   }
 
   async function onSaveImageAsync() {
-    try {
-      const localUri = await captureRef(imageRef, {
-        height: 440,
-        quality: 1,
-      });
+    if (Platform.OS !== 'web') {
+      try {
+        const localUri = await captureRef(imageRef, {
+          height: 440,
+          quality: 1,
+        });
 
-      await MediaLibrary.saveToLibraryAsync(localUri);
-      
-      if (localUri) alert('Saved!');
-    } catch (e) {
-      console.log(e);
+        await MediaLibrary.saveToLibraryAsync(localUri);
+
+        if (localUri) alert('Saved!');
+      } catch (e) {
+        console.log(e);
+      }
+    } else {
+      try {
+        const dataUrl = await domtoimage.toJpeg(
+          imageRef.current as unknown as any,
+          {
+            quality: 0.95,
+            width: 320,
+            height: 440,
+          }
+        );
+
+        let link = document.createElement('a');
+        link.download = 'sticker-smash.jpeg';
+        link.href = dataUrl;
+        link.click();
+
+        link.remove();
+      } catch (e) {
+        console.log(e);
+      }
     }
   }
 
