@@ -1,19 +1,25 @@
+import { launchImageLibraryAsync } from 'expo-image-picker';
+import * as MediaLibrary from 'expo-media-library';
 import { StatusBar } from 'expo-status-bar';
-import { Image, StyleSheet, Text, View } from 'react-native';
-import { launchCameraAsync, launchImageLibraryAsync } from 'expo-image-picker';
-import { ImageViewer } from './src/components/image-viewer';
-import { Button } from './src/components/button';
-import { useState } from 'react';
-import IconButton from './src/components/icon-button';
-import { CircleButton } from './src/components/circle-button';
-import { EmojiPicker } from './src/components/emoji-picker';
-import { EmojiList } from './src/components/emoji-list';
-import EmojiSticker from './src/components/emoji-sticker';
+import { useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Button } from './src/components/button';
+import { CircleButton } from './src/components/circle-button';
+import { EmojiList } from './src/components/emoji-list';
+import { EmojiPicker } from './src/components/emoji-picker';
+import EmojiSticker from './src/components/emoji-sticker';
+import IconButton from './src/components/icon-button';
+import { ImageViewer } from './src/components/image-viewer';
+import { captureRef } from 'react-native-view-shot';
 
 const PlaceholderImage = require('./assets/images/background-image.png');
 
 export default function App() {
+  const [status, requestPermission] = MediaLibrary.usePermissions();
+
+  const imageRef = useRef(null);
+
   const [pickedEmoji, setPickedEmoji] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -40,22 +46,41 @@ export default function App() {
     setIsModalVisible(true);
   }
 
-  function onSaveImageAsync() {}
+  async function onSaveImageAsync() {
+    try {
+      const localUri = await captureRef(imageRef, {
+        height: 440,
+        quality: 1,
+      });
+
+      await MediaLibrary.saveToLibraryAsync(localUri);
+      
+      if (localUri) alert('Saved!');
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   function onModalClose() {
     setIsModalVisible(false);
   }
 
+  if (status === null) {
+    requestPermission();
+  }
+
   return (
     <GestureHandlerRootView style={styles.container}>
       <View style={styles.imageContainer}>
-        <ImageViewer
-          placeholderImageSource={PlaceholderImage}
-          selectedImage={selectedImage}
-        />
-        {pickedEmoji && (
-          <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />
-        )}
+        <View ref={imageRef} collapsable={false}>
+          <ImageViewer
+            placeholderImageSource={PlaceholderImage}
+            selectedImage={selectedImage}
+          />
+          {pickedEmoji && (
+            <EmojiSticker imageSize={40} stickerSource={pickedEmoji} />
+          )}
+        </View>
       </View>
 
       {showAppOptions ? (
