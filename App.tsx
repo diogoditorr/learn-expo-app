@@ -13,8 +13,12 @@ import IconButton from './src/components/icon-button';
 import { ImageViewer } from './src/components/image-viewer';
 import { captureRef } from 'react-native-view-shot';
 import domtoimage from 'dom-to-image';
+import * as SplashScreen from 'expo-splash-screen';
 
 const PlaceholderImage = require('./assets/images/background-image.png');
+
+SplashScreen.preventAutoHideAsync();
+setTimeout(SplashScreen.hideAsync, 5000);
 
 export default function App() {
   const [status, requestPermission] = MediaLibrary.usePermissions();
@@ -142,7 +146,7 @@ export default function App() {
         />
       </EmojiPicker>
 
-      <StatusBar style='auto' />
+      <StatusBar style='light' />
     </GestureHandlerRootView>
   );
 }
